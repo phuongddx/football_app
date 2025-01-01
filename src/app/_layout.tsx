@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native'
-import { useColorScheme } from '@/components/useColorScheme.web'
+import { useColorScheme } from '@/src/components/useColorScheme.web'
 
 const RootNavigation = () => {
 	const colorScheme = useColorScheme()
@@ -9,7 +9,6 @@ const RootNavigation = () => {
 	return (
 		<Stack>
 			<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-			{/* <Stack.Screen name="(home)" options={{ headerShown: false }} /> */}
 		</Stack>
 	)
 }
