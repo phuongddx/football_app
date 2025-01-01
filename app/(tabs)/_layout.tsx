@@ -29,16 +29,16 @@ export default function TabLayout() {
 	return (
 		<Tabs screenOptions={commonScreenOptions}>
 			<Tabs.Screen
-				name="index"
+				name="(home)"
 				options={{
 					title: 'Home',
 					tabBarIcon: ({ color, focused }) => getTabBarIcon(focused, 'home', color),
 				}}
 			/>
 			<Tabs.Screen
-				name="about"
+				name="matches"
 				options={{
-					title: 'About',
+					title: 'Matches',
 					tabBarIcon: ({ color, focused }) => getTabBarIcon(focused, 'information-circle', color),
 				}}
 			/>

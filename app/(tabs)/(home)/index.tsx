@@ -2,13 +2,11 @@ import { Text, View } from '@/components/Themed'
 import { Link } from 'expo-router'
 import { StyleSheet } from 'react-native'
 
-export default function Index() {
+export default function HomeScreen() {
 	return (
 		<View style={styles.container}>
 			<Text style={styles.text}>Home screen</Text>
-			<Link href="/about" style={styles.button}>
-				Go to About screen
-			</Link>
+			<Link href="/details">Go to home screen</Link>
 		</View>
 	)
 }
@@ -21,10 +19,12 @@ const styles = StyleSheet.create({
 		justifyContent: 'center',
 	},
 	text: {
+		fontSize: 25,
+		fontWeight: '700',
 		color: '#fff',
 	},
 	button: {
-		fontSize: 20,
+		fontSize: 50,
 		textDecorationLine: 'underline',
 		color: '#fff',
 	},
