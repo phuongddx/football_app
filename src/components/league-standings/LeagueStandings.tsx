@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { FootballAPI } from '@/src/services/apis'
 import {
 	View,
 	Text,
@@ -9,15 +10,72 @@ import {
 	TouchableOpacity,
 	RefreshControl,
 	Dimensions,
+	FlatList,
 } from 'react-native'
-import { FootballAPI } from '@/src/services/apis'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
 
 interface LeagueStandingsProps {
 	leagueId: number
 	season: number
 }
 
+interface StandingListProps {
+	standings: Standing[]
+	refreshing: boolean
+	onRefresh: () => void
+	onRowPress: (team: Standing) => void
+	styles: Record<string, any>
+}
+
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
+
+const StandingsList: React.FC<StandingListProps> = ({
+	standings,
+	refreshing,
+	onRefresh,
+	onRowPress,
+	styles,
+}) => {
+	return (
+		<FlatList
+			data={standings}
+			keyExtractor={(item) => item.team.id.toString()}
+			refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+			renderItem={({ item, index }) => (
+				<TouchableOpacity
+					style={[styles.teamRow, index % 2 === 0 ? styles.evenRow : styles.oddRow]}
+					onPress={() => onRowPress(item)}
+				>
+					<Text style={[styles.text, styles.positionColumn]}>{item.rank}</Text>
+					<View style={styles.teamColumn}>
+						<View style={styles.teamInfo}>
+							<Image source={{ uri: item.team.logo }} style={styles.teamLogo} />
+							<Text style={styles.teamName}>{item.team.name}</Text>
+						</View>
+					</View>
+					<Text style={[styles.text, styles.statsColumn]}>{item.all.played}</Text>
+					<Text style={[styles.text, styles.statsColumn]}>{item.all.win}</Text>
+					<Text style={[styles.text, styles.statsColumn]}>{item.all.draw}</Text>
+					<Text style={[styles.text, styles.statsColumn]}>{item.all.lose}</Text>
+					<Text style={[styles.text, styles.statsColumn]}>{item.goalsDiff}</Text>
+					<Text style={[styles.text, styles.statsColumn, styles.pointsColumn]}>{item.points}</Text>
+				</TouchableOpacity>
+			)}
+			ListHeaderComponent={
+				<View style={styles.headerRow}>
+					<Text style={[styles.headerText, styles.positionColumn]}>#</Text>
+					<Text style={[styles.headerText, styles.teamColumn]}>Team</Text>
+					<Text style={[styles.headerText, styles.statsColumn]}>MP</Text>
+					<Text style={[styles.headerText, styles.statsColumn]}>W</Text>
+					<Text style={[styles.headerText, styles.statsColumn]}>D</Text>
+					<Text style={[styles.headerText, styles.statsColumn]}>L</Text>
+					<Text style={[styles.headerText, styles.statsColumn]}>GD</Text>
+					<Text style={[styles.headerText, styles.statsColumn]}>Pts</Text>
+				</View>
+			}
+		/>
+	)
+}
 
 export const LeagueStandings: React.FC<LeagueStandingsProps> = ({ leagueId, season }) => {
 	const [standings, setStandings] = useState<Standing[]>([])
@@ -51,6 +109,8 @@ export const LeagueStandings: React.FC<LeagueStandingsProps> = ({ leagueId, seas
 		setRefreshing(false)
 	}
 
+	const handleRefresh = async () => {}
+
 	if (loading && !refreshing) {
 		return (
 			<View style={styles.centerContainer}>
@@ -71,45 +131,17 @@ export const LeagueStandings: React.FC<LeagueStandingsProps> = ({ leagueId, seas
 	}
 
 	return (
-		<ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
+		<SafeAreaProvider>
 			<View style={styles.container}>
-				{/* Header */}
-				<View style={styles.headerRow}>
-					<Text style={[styles.headerText, styles.positionColumn]}>#</Text>
-					<Text style={[styles.headerText, styles.teamColumn]}>Team</Text>
-					<Text style={[styles.headerText, styles.statsColumn]}>MP</Text>
-					<Text style={[styles.headerText, styles.statsColumn]}>W</Text>
-					<Text style={[styles.headerText, styles.statsColumn]}>D</Text>
-					<Text style={[styles.headerText, styles.statsColumn]}>L</Text>
-					<Text style={[styles.headerText, styles.statsColumn]}>GD</Text>
-					<Text style={[styles.headerText, styles.statsColumn]}>Pts</Text>
-				</View>
-
-				{/* Standings Rows */}
-				{standings.map((team, index) => (
-					<View
-						key={team.team.id}
-						style={[styles.teamRow, index % 2 === 0 ? styles.evenRow : styles.oddRow]}
-					>
-						<Text style={[styles.text, styles.positionColumn]}>{team.rank}</Text>
-						<View style={styles.teamColumn}>
-							<View style={styles.teamInfo}>
-								<Image source={{ uri: team.team.logo }} style={styles.teamLogo} />
-								<Text style={styles.teamName}>{team.team.name}</Text>
-							</View>
-						</View>
-						<Text style={[styles.text, styles.statsColumn]}>{team.all.played}</Text>
-						<Text style={[styles.text, styles.statsColumn]}>{team.all.win}</Text>
-						<Text style={[styles.text, styles.statsColumn]}>{team.all.draw}</Text>
-						<Text style={[styles.text, styles.statsColumn]}>{team.all.lose}</Text>
-						<Text style={[styles.text, styles.statsColumn]}>{team.goalsDiff}</Text>
-						<Text style={[styles.text, styles.statsColumn, styles.pointsColumn]}>
-							{team.points}
-						</Text>
-					</View>
-				))}
+				<StandingsList
+					standings={standings}
+					refreshing={refreshing}
+					onRefresh={handleRefresh}
+					onRowPress={(team) => alert(`Tapped on team: ${team.team.name}`)}
+					styles={styles}
+				/>
 			</View>
-		</ScrollView>
+		</SafeAreaProvider>
 	)
 }
 
