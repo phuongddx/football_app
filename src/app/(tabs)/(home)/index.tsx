@@ -1,13 +1,12 @@
-import { Text, View } from '@/src/components/Themed'
-import { Link } from 'expo-router'
+import { LeagueStandings } from '@/src/components/league-standings/LeagueStandings'
 import { StyleSheet } from 'react-native'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
 
 export default function HomeScreen() {
 	return (
-		<View style={styles.container}>
-			<Text style={styles.text}>Home screen</Text>
-			<Link href="/details">Go to home screen</Link>
-		</View>
+		<SafeAreaProvider style={styles.container}>
+			<LeagueStandings leagueId={39} season={2023} />
+		</SafeAreaProvider>
 	)
 }
 
