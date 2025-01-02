@@ -33,15 +33,10 @@ export const LeagueStandings: React.FC<LeagueStandingsProps> = ({ leagueId, seas
 
 	const fetchStandings = async () => {
 		if (loading) return
-
 		try {
 			setLoading(true)
 			setError(null)
 			const data: StandingResponse = await FootballAPI.getStandings(leagueId, season)
-			// const dataStandings: Array<Standing> = data.response
-
-			console.log('Results', data)
-
 			setStandings(data.response[0].league.standings[0])
 		} catch (err) {
 			setError('Failed to load standings')

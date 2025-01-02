@@ -1,7 +1,8 @@
 import axios, { AxiosInstance } from 'axios'
 
 const apiClient: AxiosInstance = axios.create({
-	baseURL: 'https://v3.football.api-sports.io',
+	// baseURL: 'https://v3.football.api-sports.io',
+	baseURL: 'https://mocki.io/v1/54b3bd1b-862f-4e36-abbb-b4bf208d5434',
 	headers: {
 		'x-rapidapi-host': 'v3.football.api-sports.io',
 		'x-rapidapi-key': '77258dca53882e76d5e16f502ee4bc5e',
@@ -23,6 +24,7 @@ apiClient.interceptors.response.use(
 
 export class FootballAPI {
 	static async getStandings(league: number, season: number): Promise<StandingResponse> {
-		return apiClient.get('/standings', { params: { league, season } })
+		// return apiClient.get('/standings', { params: { league, season } })
+		return apiClient.get('')
 	}
 }

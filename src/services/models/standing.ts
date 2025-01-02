@@ -9,13 +9,15 @@ interface ApiResponse<T = unknown> {
 }
 
 interface League {
-	id: number
-	name: string
-	country: string
-	logo: string
-	flag: string
-	season: number
-	standings: Standing[][]
+	league: {
+		id: number
+		name: string
+		country: string
+		logo: string
+		flag: string
+		season: number
+		standings: Standing[][]
+	}
 }
 
 type StandingResponse = ApiResponse<League>
