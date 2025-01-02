@@ -1,6 +1,15 @@
-import { useEffect, useState } from 'react'
-import { View, Text } from '../Themed'
-import { ActivityIndicator, FlatList, StyleSheet } from 'react-native'
+import React, { useState, useEffect } from 'react'
+import {
+	View,
+	Text,
+	StyleSheet,
+	Image,
+	ScrollView,
+	ActivityIndicator,
+	TouchableOpacity,
+	RefreshControl,
+	Dimensions,
+} from 'react-native'
 import { FootballAPI } from '@/src/services/apis'
 
 interface LeagueStandingsProps {
@@ -8,31 +17,32 @@ interface LeagueStandingsProps {
 	season: number
 }
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window')
+
 export const LeagueStandings: React.FC<LeagueStandingsProps> = ({ leagueId, season }) => {
 	const [standings, setStandings] = useState<Standing[]>([])
-	const [loading, setLoading] = useState(false) // Changed initial state to false
+	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
+	const [refreshing, setRefreshing] = useState(false)
 
 	useEffect(() => {
-		// Clear previous data when props change
 		setStandings([])
 		setError(null)
 		fetchStandings()
 	}, [leagueId, season])
 
 	const fetchStandings = async () => {
-		if (loading) return // Prevent multiple simultaneous requests
+		if (loading) return
 
 		try {
 			setLoading(true)
 			setError(null)
-			const { response } = await FootballAPI.getStandings(leagueId, season)
-			if (response && Array.isArray(response)) {
-				setStandings(response)
-			} else {
-				setError('Invalid data received')
-			}
-			console.log('Response', response)
+			const data: StandingResponse = await FootballAPI.getStandings(leagueId, season)
+			// const dataStandings: Array<Standing> = data.response
+
+			console.log('Results', data)
+
+			setStandings(data.response[0].league.standings[0])
 		} catch (err) {
 			setError('Failed to load standings')
 		} finally {
@@ -40,76 +50,157 @@ export const LeagueStandings: React.FC<LeagueStandingsProps> = ({ leagueId, seas
 		}
 	}
 
-	const renderTeamRow = ({ item }: { item: Standing }) => (
-		<View style={styles.row}>
-			<Text style={styles.rank}>{item.rank}</Text>
-			<Text style={styles.team}>{item.team.name}</Text>
-			<Text style={styles.points}>{item.points}</Text>
-			{/* <Text style={styles.stats}>{`${item.win}W ${item.draw}D ${item.lose}L`}</Text> */}
-		</View>
-	)
+	const onRefresh = async () => {
+		setRefreshing(true)
+		await fetchStandings()
+		setRefreshing(false)
+	}
 
-	if (loading) {
-		return <ActivityIndicator size="small" />
+	if (loading && !refreshing) {
+		return (
+			<View style={styles.centerContainer}>
+				<ActivityIndicator size="large" color="#fff" />
+			</View>
+		)
 	}
 
 	if (error) {
-		return <Text style={styles.error}>{error}</Text>
+		return (
+			<View style={styles.centerContainer}>
+				<Text style={styles.errorText}>{error}</Text>
+				<TouchableOpacity onPress={fetchStandings} style={styles.retryButton}>
+					<Text style={styles.retryButtonText}>Retry</Text>
+				</TouchableOpacity>
+			</View>
+		)
 	}
 
 	return (
-		<View style={styles.container}>
-			{/* <View style={styles.header}>
-				<Text style={styles.rank}>Pos</Text>
-				<Text style={styles.team}>Team</Text>
-				<Text style={styles.points}>Pts</Text>
-				<Text style={styles.stats}>W-D-L</Text>
-			</View> */}
-			{/* <FlatList
-				data={standings}
-				renderItem={renderTeamRow}
-				keyExtractor={(item) => item.team.id.toString()}
-			/> */}
-		</View>
+		<ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
+			<View style={styles.container}>
+				{/* Header */}
+				<View style={styles.headerRow}>
+					<Text style={[styles.headerText, styles.positionColumn]}>#</Text>
+					<Text style={[styles.headerText, styles.teamColumn]}>Team</Text>
+					<Text style={[styles.headerText, styles.statsColumn]}>MP</Text>
+					<Text style={[styles.headerText, styles.statsColumn]}>W</Text>
+					<Text style={[styles.headerText, styles.statsColumn]}>D</Text>
+					<Text style={[styles.headerText, styles.statsColumn]}>L</Text>
+					<Text style={[styles.headerText, styles.statsColumn]}>GD</Text>
+					<Text style={[styles.headerText, styles.statsColumn]}>Pts</Text>
+				</View>
+
+				{/* Standings Rows */}
+				{standings.map((team, index) => (
+					<View
+						key={team.team.id}
+						style={[styles.teamRow, index % 2 === 0 ? styles.evenRow : styles.oddRow]}
+					>
+						<Text style={[styles.text, styles.positionColumn]}>{team.rank}</Text>
+						<View style={styles.teamColumn}>
+							<View style={styles.teamInfo}>
+								<Image source={{ uri: team.team.logo }} style={styles.teamLogo} />
+								<Text style={styles.teamName}>{team.team.name}</Text>
+							</View>
+						</View>
+						<Text style={[styles.text, styles.statsColumn]}>{team.all.played}</Text>
+						<Text style={[styles.text, styles.statsColumn]}>{team.all.win}</Text>
+						<Text style={[styles.text, styles.statsColumn]}>{team.all.draw}</Text>
+						<Text style={[styles.text, styles.statsColumn]}>{team.all.lose}</Text>
+						<Text style={[styles.text, styles.statsColumn]}>{team.goalsDiff}</Text>
+						<Text style={[styles.text, styles.statsColumn, styles.pointsColumn]}>
+							{team.points}
+						</Text>
+					</View>
+				))}
+			</View>
+		</ScrollView>
 	)
 }
 
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
+		width: SCREEN_WIDTH,
 		backgroundColor: '#fff',
 	},
-	header: {
+	centerContainer: {
+		flex: 1,
+		justifyContent: 'center',
+		alignItems: 'center',
+		padding: 20,
+	},
+	headerRow: {
 		flexDirection: 'row',
-		padding: 10,
+		paddingVertical: 10,
+		paddingHorizontal: 32,
 		backgroundColor: '#f4f4f4',
 		borderBottomWidth: 1,
-		borderColor: '#ddd',
+		borderBottomColor: '#e0e0e0',
 	},
-	row: {
+	teamRow: {
 		flexDirection: 'row',
-		padding: 10,
+		paddingVertical: 12,
+		paddingHorizontal: 16,
+		alignItems: 'center',
 		borderBottomWidth: 1,
-		borderColor: '#eee',
+		borderBottomColor: '#f0f0f0',
 	},
-	rank: {
-		width: 40,
+	evenRow: {
+		backgroundColor: '#ffffff',
+	},
+	oddRow: {
+		backgroundColor: '#fafafa',
+	},
+	headerText: {
+		fontWeight: 'bold',
+		fontSize: 12,
+		color: '#666',
+	},
+	text: {
+		fontSize: 14,
+		color: '#333',
+	},
+	positionColumn: {
+		width: 30,
+		textAlign: 'center',
+	},
+	teamColumn: {
+		flex: 1,
+		marginRight: 10,
+	},
+	statsColumn: {
+		width: 35,
+		textAlign: 'center',
+	},
+	pointsColumn: {
 		fontWeight: 'bold',
 	},
-	team: {
+	teamInfo: {
+		flexDirection: 'row',
+		alignItems: 'center',
+	},
+	teamLogo: {
+		width: 24,
+		height: 24,
+		marginRight: 8,
+	},
+	teamName: {
+		fontSize: 14,
+		color: '#333',
 		flex: 1,
 	},
-	points: {
-		width: 50,
-		textAlign: 'center',
-	},
-	stats: {
-		width: 100,
-		textAlign: 'right',
-	},
-	error: {
+	errorText: {
 		color: 'red',
-		textAlign: 'center',
-		padding: 20,
+		marginBottom: 10,
+	},
+	retryButton: {
+		padding: 10,
+		backgroundColor: '#0066cc',
+		borderRadius: 5,
+	},
+	retryButtonText: {
+		color: '#fff',
+		fontSize: 16,
 	},
 })

@@ -1,15 +1,5 @@
 import axios, { AxiosInstance } from 'axios'
 
-interface ApiResponse<T = unknown> {
-	response: T
-	errors?: string[] // Made optional
-	results?: number // Made optional
-	paging?: {
-		current: number
-		total: number
-	} // Added optional paging support
-}
-
 const apiClient: AxiosInstance = axios.create({
 	baseURL: 'https://v3.football.api-sports.io',
 	headers: {
@@ -32,7 +22,7 @@ apiClient.interceptors.response.use(
 )
 
 export class FootballAPI {
-	static async getStandings(league: number, season: number): Promise<ApiResponse<Standing[]>> {
+	static async getStandings(league: number, season: number): Promise<StandingResponse> {
 		return apiClient.get('/standings', { params: { league, season } })
 	}
 }
