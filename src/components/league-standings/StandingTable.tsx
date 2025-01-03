@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useRef } from 'react'
 import {
 	View,
 	StyleSheet,
@@ -8,6 +8,8 @@ import {
 	Text,
 	Dimensions,
 	TouchableOpacity,
+	NativeSyntheticEvent,
+	NativeScrollEvent,
 } from 'react-native'
 import { Table, Row } from 'react-native-reanimated-table'
 
@@ -28,9 +30,23 @@ const StandingsTable: React.FC<StandingListProps> = ({
 }) => {
 	const windowWidth = Dimensions.get('window').width
 	const stickyColumnWidth = windowWidth * 0.4
+	const stickyScrollRef = useRef<ScrollView>(null)
+	const mainScrollRef = useRef<ScrollView>(null)
 
 	const tableHead = ['MP', 'W', 'D', 'L', 'GF', 'GA', 'GD', 'Pts', 'Form']
 	const widthArr = [60, 60, 60, 60, 60, 60, 60, 60, 80]
+
+	const handleStickyScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+		if (mainScrollRef.current) {
+			mainScrollRef.current.scrollTo({ y: event.nativeEvent.contentOffset.y, animated: false })
+		}
+	}
+
+	const handleMainScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+		if (stickyScrollRef.current) {
+			stickyScrollRef.current.scrollTo({ y: event.nativeEvent.contentOffset.y, animated: false })
+		}
+	}
 
 	const formatRow = (standing: any) => [
 		standing.all.played,
@@ -44,19 +60,21 @@ const StandingsTable: React.FC<StandingListProps> = ({
 		standing.form,
 	]
 
-	const tableData = standings.map(formatRow)
-
 	return (
 		<View style={styles.container}>
-			{/* Sticky Team Column */}
 			<View style={[styles.stickyColumn, { width: stickyColumnWidth }]}>
 				<View style={styles.headerCell}>
 					<Text style={styles.headerText}>Team</Text>
 				</View>
 				<ScrollView
+					ref={stickyScrollRef}
+					onScroll={handleStickyScroll}
+					scrollEventThrottle={16}
+					showsHorizontalScrollIndicator={false}
+					showsVerticalScrollIndicator={false}
 					refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
 				>
-					{standings.map((standing, index) => (
+					{standings.map((standing) => (
 						<TouchableOpacity
 							key={standing.team.id}
 							onPress={() => onRowPress(standing)}
@@ -74,7 +92,6 @@ const StandingsTable: React.FC<StandingListProps> = ({
 				</ScrollView>
 			</View>
 
-			{/* Scrollable Content */}
 			<ScrollView horizontal={true} style={styles.scrollableContent}>
 				<View>
 					<Table borderStyle={styles.tableBorder}>
@@ -85,12 +102,17 @@ const StandingsTable: React.FC<StandingListProps> = ({
 							textStyle={styles.headerText}
 						/>
 						<ScrollView
+							ref={mainScrollRef}
+							onScroll={handleMainScroll}
+							scrollEventThrottle={16}
+							showsHorizontalScrollIndicator={false}
+							showsVerticalScrollIndicator={false}
 							refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
 						>
-							{tableData.map((rowData, index) => (
-								<TouchableOpacity key={index} onPress={() => onRowPress(standings[index])}>
+							{standings.map((standing, index) => (
+								<TouchableOpacity key={standing.team.id} onPress={() => onRowPress(standing)}>
 									<Row
-										data={rowData}
+										data={formatRow(standing)}
 										widthArr={widthArr}
 										style={styles.row}
 										textStyle={styles.text}
