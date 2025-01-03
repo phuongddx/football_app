@@ -10,6 +10,7 @@ import {
 } from 'react-native'
 
 import { SCREEN_WIDTH } from './LeagueStandings'
+import StandingsTable from './StandingTable'
 
 interface StandingListProps {
 	standings: Standing[]
@@ -27,42 +28,12 @@ export const StandingsList: React.FC<StandingListProps> = ({
 	styles,
 }) => {
 	return (
-		<FlatList
-			data={standings}
-			keyExtractor={(item) => item.team.id.toString()}
-			refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-			renderItem={({ item, index }) => (
-				<TouchableOpacity
-					style={[styles.teamRow, index % 2 === 0 ? styles.evenRow : styles.oddRow]}
-					onPress={() => onRowPress(item)}
-				>
-					<Text style={[styles.text, styles.positionColumn]}>{item.rank}</Text>
-					<View style={styles.teamColumn}>
-						<View style={styles.teamInfo}>
-							<Image source={{ uri: item.team.logo }} style={styles.teamLogo} />
-							<Text style={styles.teamName}>{item.team.name}</Text>
-						</View>
-					</View>
-					<Text style={[styles.text, styles.statsColumn]}>{item.all.played}</Text>
-					<Text style={[styles.text, styles.statsColumn]}>{item.all.win}</Text>
-					<Text style={[styles.text, styles.statsColumn]}>{item.all.draw}</Text>
-					<Text style={[styles.text, styles.statsColumn]}>{item.all.lose}</Text>
-					<Text style={[styles.text, styles.statsColumn]}>{item.goalsDiff}</Text>
-					<Text style={[styles.text, styles.statsColumn, styles.pointsColumn]}>{item.points}</Text>
-				</TouchableOpacity>
-			)}
-			ListHeaderComponent={
-				<View style={styles.headerRow}>
-					<Text style={[styles.headerText, styles.positionColumn]}>#</Text>
-					<Text style={[styles.headerText, styles.teamColumn]}>Team</Text>
-					<Text style={[styles.headerText, styles.statsColumn]}>MP</Text>
-					<Text style={[styles.headerText, styles.statsColumn]}>W</Text>
-					<Text style={[styles.headerText, styles.statsColumn]}>D</Text>
-					<Text style={[styles.headerText, styles.statsColumn]}>L</Text>
-					<Text style={[styles.headerText, styles.statsColumn]}>GD</Text>
-					<Text style={[styles.headerText, styles.statsColumn]}>Pts</Text>
-				</View>
-			}
+		<StandingsTable
+			standings={standings}
+			refreshing={refreshing}
+			onRefresh={onRefresh}
+			onRowPress={onRowPress}
+			styles={styles}
 		/>
 	)
 }
